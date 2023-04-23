@@ -1,0 +1,2 @@
+# Shiplog
+Battleship using Datalog

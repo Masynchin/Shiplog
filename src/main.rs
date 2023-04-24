@@ -53,22 +53,42 @@ mod tests {
 
     use super::*;
 
+    fn ships(s: &str) -> HashSet<Ship> {
+        s.chars()
+            .enumerate()
+            .filter_map(|(i, c)| match c {
+                '#' => Some(Ship(i as u8, 0)),
+                '.' | _ => None,
+            })
+            .collect()
+    }
+
+    fn shots(s: &str) -> HashSet<Shot> {
+        s.chars()
+            .enumerate()
+            .filter_map(|(i, c)| match c {
+                '*' => Some(Shot(i as u8, 0)),
+                '.' | _ => None,
+            })
+            .collect()
+    }
+
     #[test]
     fn all_misses() {
         let mut runtime = Crepe::new();
-        runtime.extend([Ship(1, 1)]);
-        runtime.extend([Shot(0, 0), Shot(1, 0), Shot(0, 1)]);
+        runtime.extend(ships(".#.."));
+        runtime.extend(shots("*.**"));
 
         let (misses, _, _, _) = runtime.run();
 
-        assert_eq!(misses, HashSet::from([Miss(0, 0), Miss(1, 0), Miss(0, 1)]));
+        assert_eq!(misses, HashSet::from([Miss(0, 0), Miss(2, 0), Miss(3, 0)]));
     }
 
     #[test]
     fn one_hit_two_undamaged() {
         let mut runtime = Crepe::new();
-        runtime.extend([Ship(0, 0), Ship(1, 0), Ship(2, 0)]);
-        runtime.extend([Shot(1, 0)]);
+        runtime.extend(ships("###"));
+        runtime.extend(shots(".*."));
 
         let (_, undamaged, hits, _) = runtime.run();
 
@@ -79,8 +99,8 @@ mod tests {
     #[test]
     fn three_sink() {
         let mut runtime = Crepe::new();
-        runtime.extend([Ship(0, 0), Ship(1, 0), Ship(2, 0)]);
-        runtime.extend([Shot(0, 0), Shot(1, 0), Shot(2, 0)]);
+        runtime.extend(ships("###"));
+        runtime.extend(shots("***"));
 
         let (_, _, _, sinked) = runtime.run();
 

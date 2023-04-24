@@ -73,15 +73,56 @@ mod tests {
             .collect()
     }
 
+    fn misses(s: &str) -> HashSet<Miss> {
+        s.chars()
+            .enumerate()
+            .filter_map(|(i, c)| match c {
+                '.' => Some(Miss(i as u8, 0)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn undamaged(s: &str) -> HashSet<Undamaged> {
+        s.chars()
+            .enumerate()
+            .filter_map(|(i, c)| match c {
+                '#' => Some(Undamaged(i as u8, 0)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn hits(s: &str) -> HashSet<Hit> {
+        s.chars()
+            .enumerate()
+            .filter_map(|(i, c)| match c {
+                '*' | 'X' => Some(Hit(i as u8, 0)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn sinks(s: &str) -> HashSet<Sink> {
+        s.chars()
+            .enumerate()
+            .filter_map(|(i, c)| match c {
+                'X' => Some(Sink(i as u8, 0)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn expec(s: &str) -> (HashSet<Miss>, HashSet<Undamaged>, HashSet<Hit>, HashSet<Sink>) {
+        (misses(s), undamaged(s), hits(s), sinks(s))
+    }
+
     #[test]
     fn all_misses() {
         let mut runtime = Crepe::new();
         runtime.extend(ships(".#.."));
         runtime.extend(shots("*.**"));
-
-        let (misses, _, _, _) = runtime.run();
-
-        assert_eq!(misses, HashSet::from([Miss(0, 0), Miss(2, 0), Miss(3, 0)]));
+        assert_eq!(runtime.run(), expec(".#.."));
     }
 
     #[test]
@@ -89,11 +130,7 @@ mod tests {
         let mut runtime = Crepe::new();
         runtime.extend(ships("###"));
         runtime.extend(shots(".*."));
-
-        let (_, undamaged, hits, _) = runtime.run();
-
-        assert_eq!(hits, HashSet::from([Hit(1, 0)]));
-        assert_eq!(undamaged, HashSet::from([Undamaged(0, 0), Undamaged(2, 0)]));
+        assert_eq!(runtime.run(), expec("#*#"));
     }
 
     #[test]
@@ -101,9 +138,6 @@ mod tests {
         let mut runtime = Crepe::new();
         runtime.extend(ships("###"));
         runtime.extend(shots("***"));
-
-        let (_, _, _, sinked) = runtime.run();
-
-        assert_eq!(sinked, HashSet::from([Sink(0, 0), Sink(1, 0), Sink(2, 0)]));
+        assert_eq!(runtime.run(), expec("XXX"));
     }
 }
